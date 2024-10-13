@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { X, Camera, RotateCw } from 'lucide-react'
 import Image from 'next/image'
 import imageCompression from 'browser-image-compression'
+import { toast } from 'sonner'
 
 export default function CameraPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -14,6 +15,15 @@ export default function CameraPage() {
   const [scannerPosition, setScannerPosition] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const usageCount = parseInt(localStorage.getItem('usageCount') || '0', 10)
+    const demoLimit = parseInt(process.env.NEXT_PUBLIC_DEMO_LIMIT || '0', 10)
+
+    if (usageCount >= demoLimit) {
+      router.push('/demo')
+    }
+  }, [router])
 
   const handleCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -63,10 +73,18 @@ export default function CameraPage() {
         method: 'POST',
         body: formData,
       })
-      const result = await response.json()
-      localStorage.setItem('scanResult', JSON.stringify(result))
-      clearInterval(interval)
-      router.push('/result')
+
+      if (!response.ok) {
+        // Handle HTTP error response
+        toast.error('Error analyzing the image', {
+          description: response.statusText,
+        })
+      } else {
+        const result = await response.json()
+        localStorage.setItem('scanResult', JSON.stringify(result))
+        clearInterval(interval)
+        router.push('/result')
+      }
     } catch (error) {
       console.error('Error analyzing image:', error)
       clearInterval(interval)
