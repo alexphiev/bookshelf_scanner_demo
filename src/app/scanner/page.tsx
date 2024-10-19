@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { ScanResult } from '@/components/scan-result'
 import { Button } from '@/components/ui/button'
-import { X, Camera, RotateCw } from 'lucide-react'
-import Image from 'next/image'
+import { cn, fileToBase64 } from '@/lib/utils'
+import { Book } from '@/types/books'
 import imageCompression from 'browser-image-compression'
+import { Camera, LoaderCircle, RotateCw, X } from 'lucide-react'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 export default function CameraPage() {
@@ -13,6 +16,9 @@ export default function CameraPage() {
   const [compressedFile, setCompressedFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [scannerPosition, setScannerPosition] = useState(0)
+  const [scanResult, setScanResult] = useState<Book[] | null>(null)
+  const [isCapturing, setIsCapturing] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -26,6 +32,7 @@ export default function CameraPage() {
   }, [router])
 
   const handleCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsCapturing(true)
     const file = event.target.files?.[0]
     if (file) {
       // Set the original image for display
@@ -47,9 +54,11 @@ export default function CameraPage() {
         setCompressedFile(file) // Fallback to original if compression fails
       }
     }
+    setIsCapturing(false)
   }
 
   const retryCapture = () => {
+    setScanResult(null)
     setCapturedImage(null)
     setCompressedFile(null)
     if (fileInputRef.current) {
@@ -66,13 +75,15 @@ export default function CameraPage() {
     }, 10)
 
     try {
-      const formData = new FormData()
-      formData.append('image', compressedFile)
-
-      const response = await fetch('https://api.example.com/analyze', {
+      const imageBase64 = await fileToBase64(compressedFile)
+      const response = await fetch('/api/bookshelf/scan', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          image_base64: imageBase64,
+        }),
       })
+
+      console.log('response', response)
 
       if (!response.ok) {
         // Handle HTTP error response
@@ -80,27 +91,37 @@ export default function CameraPage() {
           description: response.statusText,
         })
       } else {
-        const result = await response.json()
-        localStorage.setItem('scanResult', JSON.stringify(result))
-        clearInterval(interval)
-        router.push('/result')
+        const result: Book[] = await response.json()
+        setScanResult(result)
+        localStorage.setItem(
+          'usageCount',
+          (
+            parseInt(localStorage.getItem('usageCount') || '0', 10) + 1
+          ).toString()
+        )
       }
     } catch (error) {
       console.error('Error analyzing image:', error)
-      clearInterval(interval)
+    } finally {
       setIsAnalyzing(false)
+      clearInterval(interval)
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black">
-      <Button
-        className="absolute right-4 top-4 z-10"
-        variant="default"
-        onClick={() => router.push('/demo')}
-      >
-        <X className="h-6 w-6" />
-      </Button>
+    <div className="fixed inset-0">
+      {isAnalyzing && (
+        <LoaderCircle className="absolute left-4 top-4 z-10 h-6 w-6 animate-spin text-white" />
+      )}
+      {!scanResult && (
+        <Button
+          className="absolute right-2 top-2 z-10"
+          variant="ghost"
+          onClick={() => router.push('/demo')}
+        >
+          <X className="h-6 w-6 text-primary" />
+        </Button>
+      )}
 
       {!capturedImage ? (
         <div className="flex h-full flex-col items-center justify-center">
@@ -114,41 +135,64 @@ export default function CameraPage() {
           />
           <Button
             onClick={() => fileInputRef.current?.click()}
-            className="bg-blue-500 text-white hover:bg-blue-600"
+            variant="default"
           >
             <Camera className="mr-2 h-4 w-4" /> Take Photo
           </Button>
         </div>
       ) : (
-        <div className="relative flex h-full w-full items-center justify-center">
-          <div className="relative h-full w-full">
-            <Image
-              src={capturedImage}
-              alt="Captured image"
-              layout="fill"
-              objectFit="contain"
-              priority
-            />
-          </div>
-          {isAnalyzing && (
-            <div
-              className="absolute left-0 top-0 h-1 w-full bg-blue-500 opacity-40"
-              style={{
-                transform: `translateY(${Math.min(scannerPosition, 100)}vh)`,
-                width:
-                  scannerPosition > 100 ? `${200 - scannerPosition}%` : '100%',
-              }}
-            />
-          )}
-          {!isAnalyzing && (
-            <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-4">
-              <Button onClick={retryCapture}>
-                <RotateCw className="mr-2 h-4 w-4" /> Retry
-              </Button>
-              <Button onClick={startAnalyzing}>Analyze</Button>
+        <>
+          {scanResult ? (
+            <ScanResult books={scanResult} retry={retryCapture} />
+          ) : (
+            <div className="relative flex h-full w-full items-center justify-center">
+              <div className="relative h-full w-full">
+                {isCapturing && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center">
+                    <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
+                  </div>
+                )}
+                <Image
+                  src={capturedImage}
+                  alt="Captured image"
+                  layout="fill"
+                  style={{ objectFit: 'contain' }}
+                  priority
+                  className={cn(
+                    'transition-opacity duration-300',
+                    isCapturing ? 'opacity-50' : 'opacity-100'
+                  )}
+                />
+              </div>
+              {isAnalyzing && (
+                <div
+                  className="absolute left-0 top-0 h-1 w-full bg-blue-500 opacity-40"
+                  style={{
+                    transform: `translateY(${Math.min(scannerPosition, 100)}vh)`,
+                    width:
+                      scannerPosition > 100
+                        ? `${200 - scannerPosition}%`
+                        : '100%',
+                  }}
+                />
+              )}
+              {!isAnalyzing && !isCapturing && (
+                <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-4">
+                  <Button
+                    onClick={retryCapture}
+                    variant="outline"
+                    className="w-[100px]"
+                  >
+                    <RotateCw className="mr-2 h-4 w-4" /> Retry
+                  </Button>
+                  <Button onClick={startAnalyzing} className="w-[100px]">
+                    Analyze
+                  </Button>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   )

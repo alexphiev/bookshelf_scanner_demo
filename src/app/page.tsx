@@ -14,7 +14,7 @@ export default function HomePage() {
             Enter your email below to create your account
           </p>
         </div>
-        <UserAuthForm />
+        <UserAuthForm className="flex h-full flex-col justify-center" />
         <p className="px-8 text-center text-sm text-muted-foreground">
           By clicking continue, you agree to our{' '}
           <Link

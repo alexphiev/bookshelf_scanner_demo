@@ -33,7 +33,7 @@ export default function DemoPage() {
     <>
       <Card className="h-full w-full border-none shadow-none">
         <div className="flex h-full w-full flex-col justify-between">
-          <CardHeader>
+          <CardHeader className="py-0">
             <h1 className="text-center text-2xl font-semibold tracking-tight text-primary">
               Experience the power of the Booshelf Scanner API
             </h1>
