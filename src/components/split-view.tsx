@@ -18,18 +18,18 @@ export const SplitView = ({ children }: { children: React.ReactNode }) => {
               <SquareLibrary className="mr-2 h-6 w-6" />
               Bookshelf Scanner API
             </div>
-            <div className="relative z-20 mt-auto">
-              <blockquote className="space-y-2">
-                <p className="text-lg">
-                  &ldquo;This library has saved me countless hours of work and
-                  helped me deliver stunning designs to my clients faster than
-                  ever before.&rdquo;
-                </p>
-                <footer className="text-sm">Sofia Davis</footer>
-              </blockquote>
+            <div className="relative mt-auto flex flex-col gap-4">
+              <h1 className="bold text-2xl">
+                From bookshelf to app in seconds
+              </h1>
+              <div className="border-t border-white/20" />
+              <p>
+                Integrate our API and transform your book app with
+                lightning-fast AI-powered inventory management.
+              </p>
             </div>
           </div>
-          <div className="hidden h-full w-full flex-col justify-between p-4 lg:flex lg:p-10">
+          <div className="hidden h-full w-full flex-col justify-between p-4 lg:flex lg:px-8 lg:py-10">
             {children}
           </div>
         </div>

@@ -164,7 +164,7 @@ export const ScanResult = ({
           <div className="flex w-full justify-between gap-4">
             <Button
               variant="outline"
-              onClick={() => router.push('/demo')}
+              onClick={() => router.push('/')}
               className="w-1/2"
             >
               Close

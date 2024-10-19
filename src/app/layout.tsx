@@ -1,22 +1,12 @@
-import type { Metadata } from 'next'
-import localFont from 'next/font/local'
-import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
-
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
-})
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
-  weight: '100 900',
-})
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Booshelf Scanner App',
-  description: 'App using the Booshelf Scanner API',
+  title: 'Booshelf Scanner API Demo',
+  description: 'Demo for the Booshelf Scanner API',
 }
 
 export default function RootLayout({
@@ -26,9 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={inter.className}>
         {children}
         <Toaster />
       </body>

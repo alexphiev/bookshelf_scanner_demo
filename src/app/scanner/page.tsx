@@ -27,7 +27,7 @@ export default function CameraPage() {
     const demoLimit = parseInt(process.env.NEXT_PUBLIC_DEMO_LIMIT || '0', 10)
 
     if (usageCount >= demoLimit) {
-      router.push('/demo')
+      router.push('/')
     }
   }, [router])
 
@@ -117,7 +117,7 @@ export default function CameraPage() {
         <Button
           className="absolute right-2 top-2 z-10"
           variant="ghost"
-          onClick={() => router.push('/demo')}
+          onClick={() => router.push('/')}
         >
           <X className="h-6 w-6 text-primary" />
         </Button>
