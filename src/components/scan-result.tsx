@@ -65,9 +65,12 @@ export const ScanResult = ({
     books[currentBookIndex].booksFound[foundIndices[currentBookIndex]]
 
   return (
-    <div className="flex h-[100vh] w-full flex-col items-center justify-between">
-      <div className="flex h-full max-h-[800px] w-full max-w-[600px] flex-col items-center justify-between gap-4 p-8">
-        <Tabs defaultValue="ui" className="flex h-full w-full flex-col gap-4">
+    <div className="flex h-screen w-full flex-col items-center justify-between overflow-y-auto">
+      <div className="flex h-full max-h-[90vh] w-full max-w-[600px] flex-col items-center p-2 lg:p-4">
+        <Tabs
+          defaultValue="ui"
+          className="flex h-full w-full flex-col gap-2 lg:gap-4"
+        >
           <TabsList className="grid w-full grid-cols-2 bg-primary text-primary-foreground">
             <TabsTrigger value="ui">UI</TabsTrigger>
             <TabsTrigger value="json">JSON</TabsTrigger>
@@ -77,6 +80,8 @@ export const ScanResult = ({
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               style={{ x, rotate, opacity }}
+              dragElastic={0.5} // Add some elasticity for smoother drag
+              dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }} // Adjust bounce for smoother end
               onDragEnd={handleDragEnd}
               className="h-full w-full"
             >
@@ -94,7 +99,7 @@ export const ScanResult = ({
                               }
                               fill
                               alt={displayedBook.title}
-                              className="h-full w-full object-contain"
+                              className="h-full w-full object-contain object-top"
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-orange-100">
