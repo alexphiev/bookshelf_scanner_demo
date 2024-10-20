@@ -35,20 +35,28 @@ export default function CameraPage() {
     setIsCapturing(true)
     const file = event.target.files?.[0]
     if (file) {
-      // Set the original image for display
-      const reader = new FileReader()
-      reader.onload = (e) => setCapturedImage(e.target?.result as string)
-      reader.readAsDataURL(file)
+      console.log(`Original file size ${file.size / 1024 / 1024} MB`)
 
       // Compress the image
       try {
         const options = {
-          maxSizeMB: 1,
+          maxSizeMB: parseInt(
+            process.env.NEXT_PUBLIC_MAX_COMPRESSED_IMAGE_SIZE_MB || '1',
+            10
+          ),
           maxWidthOrHeight: 1920,
           useWebWorker: true,
         }
         const compressedFile = await imageCompression(file, options)
         setCompressedFile(compressedFile)
+        console.log(
+          `Compressed file size ${compressedFile.size / 1024 / 1024} MB`
+        )
+
+        // Set the original image for display
+        const reader = new FileReader()
+        reader.onload = (e) => setCapturedImage(e.target?.result as string)
+        reader.readAsDataURL(compressedFile)
       } catch (error) {
         console.error('Error compressing image:', error)
         setCompressedFile(file) // Fallback to original if compression fails
@@ -122,6 +130,11 @@ export default function CameraPage() {
           <X className="h-6 w-6 text-primary" />
         </Button>
       )}
+      {isCapturing && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      )}
 
       {!capturedImage ? (
         <div className="flex h-full flex-col items-center justify-center">
@@ -133,12 +146,14 @@ export default function CameraPage() {
             onChange={handleCapture}
             className="hidden"
           />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="default"
-          >
-            <Camera className="mr-2 h-4 w-4" /> Take Photo
-          </Button>
+          {!isCapturing && (
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="default"
+            >
+              <Camera className="mr-2 h-4 w-4" /> Take Photo
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -147,15 +162,10 @@ export default function CameraPage() {
           ) : (
             <div className="relative flex h-full w-full items-center justify-center">
               <div className="relative h-full w-full">
-                {isCapturing && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center">
-                    <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
-                  </div>
-                )}
                 <Image
                   src={capturedImage}
                   alt="Captured image"
-                  layout="fill"
+                  fill
                   style={{ objectFit: 'contain' }}
                   priority
                   className={cn(
