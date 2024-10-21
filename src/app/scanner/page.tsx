@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import * as Sentry from '@sentry/nextjs'
 
 export default function CameraPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -91,13 +92,10 @@ export default function CameraPage() {
         }),
       })
 
-      console.log('response', response)
-
       if (!response.ok) {
         // Handle HTTP error response
-        toast.error('Error analyzing the image', {
-          description: response.statusText,
-        })
+        toast.error(`Error analyzing the image: ${response.statusText}`)
+        Sentry.captureMessage(JSON.stringify(response, null, 2))
       } else {
         const result: Book[] = await response.json()
         setScanResult(result)
@@ -110,6 +108,7 @@ export default function CameraPage() {
       }
     } catch (error) {
       console.error('Error analyzing image:', error)
+      Sentry.captureException(error)
     } finally {
       setIsAnalyzing(false)
       clearInterval(interval)
