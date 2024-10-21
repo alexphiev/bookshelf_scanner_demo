@@ -192,7 +192,7 @@ export default function CameraPage() {
                     variant="outline"
                     className="w-[100px]"
                   >
-                    <RotateCw className="mr-2 h-4 w-4" /> Retry
+                    <RotateCw className="mr-2 h-4 w-4" /> Retake Photo
                   </Button>
                   <Button onClick={startAnalyzing} className="w-[100px]">
                     Analyze
