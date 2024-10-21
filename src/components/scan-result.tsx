@@ -61,8 +61,23 @@ export const ScanResult = ({
 
   console.log(JSON.stringify(books, null, 2))
 
-  const displayedBook =
-    books[currentBookIndex].booksFound[foundIndices[currentBookIndex]]
+  const selectedBook = books[currentBookIndex]
+  let displayedBook: {
+    title: string
+    authors: string | string[]
+    publisher: string
+    imageLinks?: {
+      thumbnail: string
+    }
+  } = selectedBook.booksFound[foundIndices[currentBookIndex]]
+
+  if (!displayedBook) {
+    displayedBook = {
+      title: selectedBook.detectedTitle,
+      authors: selectedBook.detectedAuthors,
+      publisher: selectedBook.detectedPublisher,
+    }
+  }
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-between overflow-y-auto">
@@ -108,7 +123,7 @@ export const ScanResult = ({
                           )}
                           <div className="absolute bottom-0 flex w-full flex-col items-center justify-between gap-2">
                             {foundIndices[currentBookIndex] <
-                              books[currentBookIndex].booksFound.length - 1 && (
+                              selectedBook.booksFound.length - 1 && (
                               <Button
                                 variant="default"
                                 size="sm"
