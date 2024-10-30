@@ -3,7 +3,7 @@
 import { ScanResult } from '@/components/scan-result'
 import { Button } from '@/components/ui/button'
 import { cn, fileToBase64 } from '@/lib/utils'
-import { Book } from '@/types/books'
+import { Book } from '@/types/books.types'
 import imageCompression from 'browser-image-compression'
 import { Camera, LoaderCircle, RotateCw, X } from 'lucide-react'
 import Image from 'next/image'

@@ -1,6 +1,6 @@
 'use server'
 
-import { Book } from '@/types/books'
+import { Book } from '@/types/books.types'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {

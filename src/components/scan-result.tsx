@@ -1,6 +1,6 @@
 'use client'
 
-import { Book } from '@/types/books'
+import { Book, DisplayedBook } from '@/types/books.types'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
@@ -38,13 +38,14 @@ export const ScanResult = ({
     const currentBook = books[currentBookIndex]
     const currentFoundIndex = foundIndices[currentBookIndex]
 
+    const newFoundIndices = [...foundIndices]
     if (currentFoundIndex < currentBook.booksFound.length - 1) {
-      const newFoundIndices = [...foundIndices]
       newFoundIndices[currentBookIndex] = currentFoundIndex + 1
-      setFoundIndices(newFoundIndices)
-    } else if (currentBookIndex < books.length - 1) {
-      setCurrentBookIndex(currentBookIndex + 1)
+    } else {
+      // Reset to the first book if the current book is the last one
+      newFoundIndices[currentBookIndex] = 0
     }
+    setFoundIndices(newFoundIndices)
   }
 
   const handlePrevious = () => {
@@ -62,20 +63,20 @@ export const ScanResult = ({
   console.log(JSON.stringify(books, null, 2))
 
   const selectedBook = books[currentBookIndex]
-  let displayedBook: {
-    title: string
-    authors: string | string[]
-    publisher: string
-    imageLinks?: {
-      thumbnail: string
-    }
-  } = selectedBook.booksFound[foundIndices[currentBookIndex]]
+  let displayedBook: DisplayedBook =
+    selectedBook.booksFound[foundIndices[currentBookIndex]]
 
   if (!displayedBook) {
+    // Fallback to the AI detected values
     displayedBook = {
       title: selectedBook.detectedTitle,
+      subtitle: '',
       authors: selectedBook.detectedAuthors,
       publisher: selectedBook.detectedPublisher,
+      language: selectedBook.detectedLanguage,
+      isbn_13: '',
+      isbn_10: '',
+      cover_url: null,
     }
   }
 
@@ -106,10 +107,10 @@ export const ScanResult = ({
                     {books.length > 0 && (
                       <div className="relative h-full w-full cursor-grab">
                         <div className="absolute inset-0 overflow-hidden rounded-lg shadow-lg">
-                          {displayedBook.imageLinks ? (
+                          {displayedBook.cover_url ? (
                             <Image
                               src={
-                                displayedBook.imageLinks?.thumbnail ||
+                                displayedBook.cover_url ||
                                 '/placeholder.svg?height=384&width=256'
                               }
                               fill
@@ -122,8 +123,7 @@ export const ScanResult = ({
                             </div>
                           )}
                           <div className="absolute bottom-0 flex w-full flex-col items-center justify-between gap-2">
-                            {foundIndices[currentBookIndex] <
-                              selectedBook.booksFound.length - 1 && (
+                            {selectedBook.booksFound.length > 1 && (
                               <Button
                                 variant="default"
                                 size="sm"
@@ -137,12 +137,21 @@ export const ScanResult = ({
                               <h3 className="line-clamp-2 text-lg font-bold">
                                 {displayedBook.title}
                               </h3>
-                              <p className="line-clamp-2 text-sm">
+                              <p className="text-md line-clamp-2">
                                 {displayedBook.authors}
                               </p>
-                              <p className="line-clamp-1 text-xs text-gray-300">
-                                {displayedBook.publisher}
-                              </p>
+                              <div className="flex w-full flex-row justify-between gap-4">
+                                <p className="line-clamp-1 text-sm text-gray-300">
+                                  Publisher:{' '}
+                                  {displayedBook.publisher || 'Unknown'}
+                                </p>
+                                <p className="line-clamp-1 text-sm text-gray-300">
+                                  ISBN:{' '}
+                                  {displayedBook.isbn_13 ||
+                                    displayedBook.isbn_10 ||
+                                    'Unknown'}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
