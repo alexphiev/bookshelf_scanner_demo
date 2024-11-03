@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
+import Spinner from './ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 
 export const ScanResult = ({
@@ -18,6 +19,7 @@ export const ScanResult = ({
   retry: () => void
 }) => {
   const [currentBookIndex, setCurrentBookIndex] = useState(0)
+  const [imageLoading, setImageLoading] = useState(true)
   const [foundIndices, setFoundIndices] = useState<number[]>(books.map(() => 0))
   const router = useRouter()
 
@@ -35,6 +37,8 @@ export const ScanResult = ({
   }
 
   const handleReject = () => {
+    setImageLoading(true)
+
     const currentBook = books[currentBookIndex]
     const currentFoundIndex = foundIndices[currentBookIndex]
 
@@ -51,12 +55,14 @@ export const ScanResult = ({
   const handlePrevious = () => {
     if (currentBookIndex > 0) {
       setCurrentBookIndex(currentBookIndex - 1)
+      setImageLoading(true)
     }
   }
 
   const handleNext = () => {
     if (currentBookIndex < books.length - 1) {
       setCurrentBookIndex(currentBookIndex + 1)
+      setImageLoading(true)
     }
   }
 
@@ -108,15 +114,22 @@ export const ScanResult = ({
                       <div className="relative h-full w-full cursor-grab">
                         <div className="absolute inset-0 overflow-hidden rounded-lg shadow-lg">
                           {displayedBook.cover_url ? (
-                            <Image
-                              src={
-                                displayedBook.cover_url ||
-                                '/placeholder.svg?height=384&width=256'
-                              }
-                              fill
-                              alt={displayedBook.title}
-                              className="h-full w-full object-contain object-top"
-                            />
+                            <>
+                              {imageLoading && (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <Spinner variant="dark" />
+                                </div>
+                              )}
+                              <Image
+                                key={displayedBook.cover_url}
+                                loading="eager"
+                                onLoad={() => setImageLoading(false)}
+                                src={displayedBook.cover_url}
+                                fill
+                                alt={displayedBook.title}
+                                className="h-full w-full object-contain object-top"
+                              />
+                            </>
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-orange-100">
                               No image available

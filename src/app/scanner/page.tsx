@@ -2,15 +2,16 @@
 
 import { ScanResult } from '@/components/scan-result'
 import { Button } from '@/components/ui/button'
+import Spinner from '@/components/ui/spinner'
 import { cn, fileToBase64 } from '@/lib/utils'
 import { Book } from '@/types/books.types'
+import * as Sentry from '@sentry/nextjs'
 import imageCompression from 'browser-image-compression'
-import { Camera, LoaderCircle, RotateCw, X } from 'lucide-react'
+import { Camera, RotateCw, StarsIcon, X } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import * as Sentry from '@sentry/nextjs'
 
 export default function CameraPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -88,6 +89,7 @@ export default function CameraPage() {
       const response = await fetch('/api/bookshelf/scan', {
         method: 'POST',
         body: JSON.stringify({
+          file_name: compressedFile.name,
           image_base64: imageBase64,
         }),
       })
@@ -108,7 +110,9 @@ export default function CameraPage() {
       }
     } catch (error) {
       console.error('Error analyzing image:', error)
-      Sentry.captureException(error)
+      if (process.env.NODE_ENV === 'production') {
+        Sentry.captureException(error)
+      }
     } finally {
       setIsAnalyzing(false)
       clearInterval(interval)
@@ -117,9 +121,7 @@ export default function CameraPage() {
 
   return (
     <div className="fixed inset-0">
-      {isAnalyzing && (
-        <LoaderCircle className="absolute left-4 top-4 z-10 h-6 w-6 animate-spin text-white" />
-      )}
+      {isAnalyzing && <Spinner variant="light" />}
       {!scanResult && (
         <Button
           className="absolute right-2 top-2 z-10"
@@ -131,7 +133,7 @@ export default function CameraPage() {
       )}
       {isCapturing && (
         <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
+          <Spinner variant="light" />
         </div>
       )}
 
@@ -190,12 +192,12 @@ export default function CameraPage() {
                   <Button
                     onClick={retryCapture}
                     variant="outline"
-                    className="w-[100px]"
+                    className="w-[150px]"
                   >
                     <RotateCw className="mr-2 h-4 w-4" /> Retake Photo
                   </Button>
-                  <Button onClick={startAnalyzing} className="w-[100px]">
-                    Analyze
+                  <Button onClick={startAnalyzing} className="w-[150px]">
+                    <StarsIcon className="mr-2 h-4 w-4" /> Analyze
                   </Button>
                 </div>
               )}
